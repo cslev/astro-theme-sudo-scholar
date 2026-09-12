@@ -1,0 +1,15 @@
+[
+  {
+    "id": "example-talk",
+    "title": "TODO: A Conference Talk Title",
+    "tags": ["Talk"],
+    "youtubeId": "TODO_YOUTUBE_VIDEO_ID"
+  },
+  {
+    "id": "example-project",
+    "title": "TODO: A Side Project Title",
+    "tags": ["Web Design"],
+    "logo": "/projects/placeholder.webp",
+    "link": "https://example.com/"
+  }
+]

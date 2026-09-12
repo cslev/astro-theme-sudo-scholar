@@ -1,0 +1,158 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+    posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+    for (const tag of post.data.tags ?? []) {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+    }
+}
+
+const tags = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+---
+
+{tags.length > 0 && (
+    <aside class="tag-sidebar" aria-label="Filter posts by tag">
+        <h2 class="tag-sidebar-title">Tags</h2>
+        <ul class="tag-list">
+            {tags.map(([tag, count]) => (
+                <li>
+                    <button type="button" class="tag-filter-btn" data-tag={tag} aria-pressed="false">
+                        <span class="tag-name">#{tag}</span>
+                        <span class="tag-count">{count}</span>
+                    </button>
+                </li>
+            ))}
+        </ul>
+        <button type="button" class="tag-clear-btn" hidden>Clear filter</button>
+    </aside>
+)}
+
+<script>
+    const sidebar = document.querySelector('.tag-sidebar');
+    if (sidebar) {
+        const buttons = Array.from(sidebar.querySelectorAll<HTMLButtonElement>('.tag-filter-btn'));
+        const clearBtn = sidebar.querySelector<HTMLButtonElement>('.tag-clear-btn');
+        const items = Array.from(document.querySelectorAll<HTMLElement>('[data-tags]'));
+
+        // Multiple tags can be active at once (AND — a post must carry
+        // every active tag to stay visible), not just one.
+        const active = new Set<string>();
+
+        const tagsOf = (item: HTMLElement) => (item.dataset.tags || '').split(',').filter(Boolean);
+
+        const applyFilter = () => {
+            const visible: HTMLElement[] = [];
+            for (const item of items) {
+                const itemTags = tagsOf(item);
+                const matches = [...active].every((tag) => itemTags.includes(tag));
+                item.hidden = !matches;
+                if (matches) visible.push(item);
+            }
+
+            // The tag list itself narrows to what's still relevant: once a
+            // tag is active, any other tag that no longer co-occurs with it
+            // (across the currently visible posts) disappears, and each
+            // remaining button's count updates to the co-occurring count
+            // rather than the original global one.
+            for (const btn of buttons) {
+                const tag = btn.dataset.tag ?? '';
+                const isActive = active.has(tag);
+                const coOccurring = visible.reduce(
+                    (sum, item) => sum + (tagsOf(item).includes(tag) ? 1 : 0),
+                    0,
+                );
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', String(isActive));
+                const listItem = btn.closest('li');
+                if (listItem) listItem.hidden = !isActive && coOccurring === 0;
+                const countEl = btn.querySelector('.tag-count');
+                if (countEl) countEl.textContent = String(coOccurring);
+            }
+
+            if (clearBtn) clearBtn.hidden = active.size === 0;
+        };
+
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const tag = btn.dataset.tag;
+                if (!tag) return;
+                if (active.has(tag)) active.delete(tag);
+                else active.add(tag);
+                applyFilter();
+            });
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            active.clear();
+            applyFilter();
+        });
+    }
+</script>
+
+<style>
+    .tag-sidebar {
+        border: 1px solid var(--color-border-strong);
+        border-radius: 12px;
+        padding: 1.25rem;
+        background-color: var(--color-bg-offset);
+        height: fit-content;
+    }
+    .tag-sidebar-title {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+    }
+    .tag-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .tag-filter-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: none;
+        color: var(--color-text-main);
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-align: left;
+        font-family: var(--font-sans);
+    }
+    .tag-filter-btn:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+    .tag-filter-btn.active {
+        background-color: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-bg);
+    }
+    .tag-count {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+    .tag-clear-btn {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        text-decoration: underline;
+        border: none;
+        background: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        padding: 0;
+    }
+</style>

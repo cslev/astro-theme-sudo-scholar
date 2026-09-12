@@ -1,0 +1,16 @@
+# Serve the site's own error pages (built by src/pages/404.astro and
+# src/pages/403.astro) instead of the server's generic defaults.
+# Apache/LiteSpeed treat a root-relative ErrorDocument path as an internal
+# redirect, so the response still carries the real status code — this only
+# changes what HTML gets shown.
+#
+# The 403 directive also applies to public/cv-content/.htaccess's
+# `Require all denied` (the CV gate's own protection, see that file) —
+# that's fine and expected: direct requests to /cv-content/ still get
+# blocked with a real 403, just with this page instead of a bare server
+# error.
+ErrorDocument 404 /404.html
+# Unlike 404.astro, Astro has no special-cased build output for 403.astro —
+# it follows the site's normal directory-style routing and builds to
+# dist/403/index.html, not a flat dist/403.html. Hence the trailing slash.
+ErrorDocument 403 /403/

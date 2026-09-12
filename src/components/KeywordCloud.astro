@@ -1,0 +1,195 @@
+---
+import type { BibEntry } from '../utils/bibtex';
+import { parseKeywords } from '../utils/bibtex';
+
+interface Props {
+    entries: BibEntry[];
+}
+
+const { entries } = Astro.props;
+
+const counts = new Map<string, number>();
+for (const entry of entries) {
+    for (const keyword of parseKeywords(entry)) {
+        counts.set(keyword, (counts.get(keyword) || 0) + 1);
+    }
+}
+
+const keywords = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+const maxCount = Math.max(1, ...keywords.map(([, count]) => count));
+const minCount = Math.min(maxCount, ...keywords.map(([, count]) => count));
+
+const MIN_SIZE = 0.8;
+const MAX_SIZE = 1.65;
+
+const sizeFor = (count: number) => {
+    if (maxCount === minCount) return (MIN_SIZE + MAX_SIZE) / 2;
+    const t = (count - minCount) / (maxCount - minCount);
+    return MIN_SIZE + t * (MAX_SIZE - MIN_SIZE);
+};
+---
+
+{keywords.length > 0 && (
+    <div class="keyword-cloud" role="group" aria-label="Filter publications by keyword">
+        {keywords.map(([keyword, count]) => (
+            <button
+                type="button"
+                class="keyword-pill"
+                data-keyword={keyword}
+                style={`font-size: ${sizeFor(count).toFixed(2)}rem;`}
+                aria-pressed="false"
+            >
+                {keyword}
+                <span class="keyword-count">{count}</span>
+            </button>
+        ))}
+        <button type="button" class="keyword-pill keyword-clear" data-keyword="" hidden>
+            Clear filter
+        </button>
+    </div>
+)}
+
+<script>
+    const cloud = document.querySelector('.keyword-cloud');
+    if (cloud) {
+        const pills = Array.from(cloud.querySelectorAll<HTMLButtonElement>('.keyword-pill:not(.keyword-clear)'));
+        const clearBtn = cloud.querySelector<HTMLButtonElement>('.keyword-clear');
+        const items = Array.from(document.querySelectorAll<HTMLElement>('[data-keywords]'));
+
+        // Multiple keywords can be active at once (AND — a publication must
+        // carry every active keyword to stay visible), not just one.
+        const active = new Set<string>();
+
+        const keywordsOf = (item: HTMLElement) => (item.dataset.keywords || '').split(',').filter(Boolean);
+
+        // A section heading (e.g. a year subtitle grouping publications) is
+        // optional and page-specific — marked with `data-year-heading`, not
+        // hardcoded here — but when present, it should disappear once every
+        // item under it is filtered out, rather than sitting above an empty
+        // gap.
+        const applySectionHeadings = () => {
+            const flowElements = Array.from(
+                document.querySelectorAll<HTMLElement>('[data-year-heading], [data-keywords]'),
+            );
+            let currentHeading: HTMLElement | null = null;
+            let currentHeadingHasVisibleItem = false;
+
+            const closeOutHeading = () => {
+                if (currentHeading) currentHeading.hidden = !currentHeadingHasVisibleItem;
+            };
+
+            for (const el of flowElements) {
+                if (el.dataset.yearHeading !== undefined) {
+                    closeOutHeading();
+                    currentHeading = el;
+                    currentHeadingHasVisibleItem = false;
+                } else if (!el.hidden) {
+                    currentHeadingHasVisibleItem = true;
+                }
+            }
+            closeOutHeading();
+        };
+
+        const applyFilter = () => {
+            const visible: HTMLElement[] = [];
+            for (const item of items) {
+                const itemKeywords = keywordsOf(item);
+                const matches = [...active].every((keyword) => itemKeywords.includes(keyword));
+                item.hidden = !matches;
+                if (matches) visible.push(item);
+            }
+
+            // The cloud itself narrows to what's still relevant: once a
+            // keyword is active, any other keyword that no longer
+            // co-occurs with it (across the currently visible entries)
+            // disappears, and each remaining pill's count updates to the
+            // co-occurring count rather than the original global one.
+            for (const pill of pills) {
+                const keyword = pill.dataset.keyword ?? '';
+                const isActive = active.has(keyword);
+                const coOccurring = visible.reduce(
+                    (sum, item) => sum + (keywordsOf(item).includes(keyword) ? 1 : 0),
+                    0,
+                );
+                pill.classList.toggle('active', isActive);
+                pill.setAttribute('aria-pressed', String(isActive));
+                pill.hidden = !isActive && coOccurring === 0;
+                const countEl = pill.querySelector('.keyword-count');
+                if (countEl) countEl.textContent = String(coOccurring);
+            }
+
+            if (clearBtn) clearBtn.hidden = active.size === 0;
+            applySectionHeadings();
+        };
+
+        pills.forEach((pill) => {
+            pill.addEventListener('click', () => {
+                const keyword = pill.dataset.keyword;
+                if (!keyword) return;
+                if (active.has(keyword)) active.delete(keyword);
+                else active.add(keyword);
+                applyFilter();
+            });
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            active.clear();
+            applyFilter();
+        });
+    }
+</script>
+
+<style>
+    .keyword-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1.5rem 0 2rem;
+        padding: 1.25rem;
+        background-color: var(--color-bg-offset);
+        border: 1px solid var(--color-border-strong);
+        border-radius: 12px;
+    }
+    .keyword-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35em;
+        line-height: 1;
+        padding: 0.3em 0.65em;
+        border-radius: 999px;
+        border: 1px solid var(--color-border);
+        background-color: var(--color-bg);
+        color: var(--color-text-main);
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: all 0.15s ease;
+    }
+    /* `display: inline-flex` above is an author-level style, which always
+       beats the browser's own `[hidden] { display: none }` default — so a
+       pill that no longer co-occurs with the active filters needs this
+       explicit override to actually disappear. */
+    .keyword-pill[hidden] {
+        display: none;
+    }
+    .keyword-pill:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+    .keyword-pill.active {
+        background-color: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-bg);
+    }
+    .keyword-count {
+        font-size: 0.7em;
+        opacity: 0.7;
+    }
+    .keyword-clear {
+        font-size: 0.85rem !important;
+        text-decoration: underline;
+        border: none;
+        background: none;
+        color: var(--color-text-muted);
+    }
+</style>

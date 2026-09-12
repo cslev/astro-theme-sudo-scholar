@@ -1,0 +1,301 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import AuthorLink from '../../components/AuthorLink.astro';
+import TagSidebar from '../../components/TagSidebar.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { url } from '../../utils/paths';
+
+export async function getStaticPaths() {
+    const posts = (await getCollection('blog')).sort(
+        (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+    );
+
+    // The tag sidebar's client-side filter only ever affects posts already
+    // rendered on the current page — it won't reach into other pages. The
+    // dedicated /tags/[tag]/ pages remain a complete, unpaginated-per-tag
+    // fallback for that.
+    const pageSize = 10;
+    const totalPages = Math.ceil(posts.length / pageSize);
+    const paths = [];
+
+    for (let i = 1; i <= totalPages; i++) {
+        paths.push({
+            params: { page: i === 1 ? undefined : String(i) },
+            props: {
+                posts: posts.slice((i - 1) * pageSize, i * pageSize),
+                currentPage: i,
+                totalPages,
+                nextPage: i < totalPages ? i + 1 : null,
+                prevPage: i > 1 ? i - 1 : null,
+            },
+        });
+    }
+
+    return paths;
+}
+
+const { posts, currentPage, totalPages, nextPage, prevPage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+        <style>
+            .blog-layout {
+                display: grid;
+                grid-template-columns: 1fr 220px;
+                gap: 3rem;
+                align-items: start;
+            }
+            .blog-list {
+                display: flex;
+                flex-direction: column;
+                gap: 3rem;
+                margin-top: 3rem;
+            }
+            @media (max-width: 900px) {
+                .blog-layout {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .blog-post-card {
+                display: block;
+                border-radius: 14px;
+                overflow: hidden;
+                /* Cast toward the south-east: positive x, positive y. */
+                box-shadow: 10px 12px 24px rgba(0, 0, 0, 0.16);
+                background-color: var(--color-bg-offset);
+                border: 1px solid var(--color-border-strong);
+                transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            }
+            .blog-post-card:hover {
+                box-shadow: 14px 16px 30px rgba(0, 0, 0, 0.2);
+                transform: translateY(-2px);
+            }
+            /* Pure black is nearly invisible against the dark theme's own
+               near-black background, so use a lighter tint instead — the
+               theme's own accent green — to keep the shadow actually
+               visible. */
+            [data-theme='dark'] .blog-post-card {
+                box-shadow: 10px 12px 24px rgba(74, 222, 128, 0.18);
+            }
+            [data-theme='dark'] .blog-post-card:hover {
+                box-shadow: 14px 16px 30px rgba(74, 222, 128, 0.28);
+            }
+            /*
+             * The tag sidebar's filter script toggles the `hidden` attribute.
+             * Without this, `display: block` above beats the browser's
+             * default `[hidden] { display: none }` rule (same specificity,
+             * author styles win), so hidden cards would stay visible.
+             */
+            .blog-post-card[hidden] {
+                display: none;
+            }
+
+            /* Hero band: post image as a full-width banner, title below it
+               (not overlaid) so long titles always have room to wrap —
+               especially on mobile, where an overlay had no space left. */
+            .card-hero {
+                position: relative;
+                display: block;
+                aspect-ratio: 21/7;
+                overflow: hidden;
+                text-decoration: none;
+            }
+            .card-hero img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                transition: transform 0.4s ease, filter 0.3s ease;
+            }
+            .blog-post-card:hover .card-hero img {
+                transform: scale(1.03);
+                filter: brightness(1.05);
+            }
+            .card-title-band {
+                display: block;
+                text-decoration: none;
+                padding: 1.25rem 2rem 0;
+            }
+            .blog-title {
+                margin: 0;
+                font-family: var(--font-serif);
+                font-size: 1.6rem;
+                line-height: 1.25;
+                letter-spacing: -0.01em;
+                /* Light theme: Oxford Blue accent. Dark theme: plain white
+                   (not the accent blue) for maximum contrast against the
+                   dark background, per explicit request. */
+                color: var(--color-accent);
+            }
+            [data-theme='dark'] .blog-title {
+                color: #ffffff;
+            }
+
+            .blog-content {
+                padding: 1.5rem 2rem 2rem;
+            }
+            .blog-meta {
+                font-size: 0.85rem;
+                color: var(--color-text-muted);
+                margin-bottom: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                align-items: center;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-weight: 500;
+            }
+            .meta-divider {
+                color: #ddd;
+            }
+            .blog-desc {
+                margin: 0 0 1.5rem 0;
+                color: var(--color-text-muted);
+                line-height: 1.7;
+                font-size: 1.05rem;
+            }
+            .read-more {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: var(--color-accent);
+                display: inline-flex;
+                align-items: center;
+                text-decoration: none;
+                border-bottom: 2px solid transparent;
+                transition: border-color 0.2s;
+            }
+            .read-more:hover {
+                border-bottom-color: var(--color-accent);
+            }
+
+            @media (max-width: 720px) {
+                .card-hero {
+                    aspect-ratio: 16/9;
+                }
+                .card-title-band,
+                .blog-content {
+                    padding-left: 1.25rem;
+                    padding-right: 1.25rem;
+                }
+                .blog-title {
+                    font-size: 1.3rem;
+                }
+            }
+        </style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Blog</h1>
+            <p style="margin-bottom: 2rem; max-width: 700px; color: var(--color-text-muted);">
+                Research highlights, tutorials, and side-project write-ups.
+            </p>
+
+            <div class="blog-layout">
+            <div class="blog-list">
+                {
+                    posts.map((post) => (
+                        <article class="blog-post-card" data-tags={(post.data.tags ?? []).join(',')}>
+                            <a href={url(`/blog/${post.id}/`)} class="card-hero">
+                                {post.data.heroImage ? (
+                                    <Image width={1200} height={400} src={post.data.heroImage} alt={post.data.title} />
+                                ) : (
+                                    <img src={url(`/blog/${post.id}.png`)} alt={post.data.title} />
+                                )}
+                            </a>
+
+                            <a href={url(`/blog/${post.id}/`)} class="card-title-band">
+                                <h2 class="blog-title">{post.data.title}</h2>
+                            </a>
+
+                            <div class="blog-content">
+                                <div class="blog-meta">
+                                    <FormattedDate date={post.data.pubDate} />
+
+                                    {post.data.authors && post.data.authors.length > 0 && (
+                                        <>
+                                            <span class="meta-divider">&bull;</span>
+                                            {post.data.authors.map((authorId, i) => (
+                                                <span>
+                                                    <AuthorLink nameOrSlug={authorId} />
+                                                    {i < post.data.authors!.length - 1 ? ', ' : ''}
+                                                </span>
+                                            ))}
+                                        </>
+                                    )}
+                                    {post.data.tags && post.data.tags.length > 0 && (
+                                        <>
+                                            <span class="meta-divider">&bull;</span>
+                                            <span class="blog-tags" style="display: inline-flex; flex-wrap: wrap; gap: 0.25rem;">
+                                                {post.data.tags.map((tag) => (
+                                                    <a href={url(`/tags/${tag}`)} style="text-decoration: none; color: var(--color-accent); font-weight: 600;">#{tag}</a>
+                                                ))}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+
+                                <p class="blog-desc">
+                                    {post.data.description}
+                                </p>
+
+                                <a href={url(`/blog/${post.id}/`)} class="read-more">Read Article &rarr;</a>
+                            </div>
+                        </article>
+                    ))
+                }
+
+                {posts.length === 0 && (
+                    <p style="text-align: center; color: var(--color-text-muted);">
+                        No blog posts found.
+                    </p>
+                )}
+            </div>
+
+            <TagSidebar posts={posts} />
+            </div>
+
+            {totalPages > 1 && (
+                <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 3rem; flex-wrap: wrap;">
+                    {currentPage > 1 ? (
+                        <a href={url('/blog')} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">&laquo; First</a>
+                    ) : (
+                        <span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">&laquo; First</span>
+                    )}
+
+                    {prevPage ? (
+                        <a href={url(prevPage === 1 ? '/blog' : `/blog/${prevPage}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">&larr; Previous</a>
+                    ) : (
+                        <span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">&larr; Previous</span>
+                    )}
+
+                    <span style="display: flex; align-items: center; font-weight: 600; color: var(--color-text-muted);">
+                        Page {currentPage} of {totalPages}
+                    </span>
+
+                    {nextPage ? (
+                        <a href={url(`/blog/${nextPage}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">Next &rarr;</a>
+                    ) : (
+                        <span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">Next &rarr;</span>
+                    )}
+
+                    {currentPage < totalPages ? (
+                        <a href={url(`/blog/${totalPages}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">Last &raquo;</a>
+                    ) : (
+                        <span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">Last &raquo;</span>
+                    )}
+                </div>
+            )}
+		</main>
+		<Footer />
+	</body>
+</html>

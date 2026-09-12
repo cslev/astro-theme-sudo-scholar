@@ -1,0 +1,135 @@
+---
+import { Image } from 'astro:assets';
+// TODO: replace these four placeholders with your own institutes/employers.
+// Each entry needs a name, an optional link, and a logo image imported from
+// src/assets/ — see the fitDimensions comment below for sizing guidance.
+import logo1 from '../assets/institutes-placeholder-1.webp';
+import logo2 from '../assets/institutes-placeholder-2.webp';
+import logo3 from '../assets/institutes-placeholder-3.webp';
+import logo4 from '../assets/institutes-placeholder-4.webp';
+
+const institutes = [
+	{ name: 'TODO: Institute One', href: '#', logo: logo1 },
+	{ name: 'TODO: Institute Two', href: '#', logo: logo2 },
+	{ name: 'TODO: Institute Three', href: '#', logo: logo3 },
+	{ name: 'TODO: Institute Four', href: '#', logo: logo4 },
+];
+
+// Rendered twice back-to-back so the track can scroll exactly one copy's
+// width (-50%) and loop seamlessly with no visible jump or gap.
+const track = [...institutes, ...institutes];
+
+// The source logos are raw brand assets at wildly varying, often huge,
+// resolutions (some 800px+ on a side, one over 3000px wide) even though the
+// tile only ever displays them at ~160x90 (desktop) or ~120x70 (mobile).
+// Downscale each one at build time to fit within a 320x180 box — 2x the
+// desktop tile for retina sharpness — while preserving its own aspect
+// ratio, instead of shipping the original multi-hundred-KB file to shrink
+// via CSS in the browser.
+const MAX_W = 320;
+const MAX_H = 180;
+const fitDimensions = (logo: { width: number; height: number }) => {
+	const scale = Math.min(MAX_W / logo.width, MAX_H / logo.height, 1);
+	return { width: Math.round(logo.width * scale), height: Math.round(logo.height * scale) };
+};
+---
+
+<section class="logo-marquee-section">
+	<h2 style="margin-top: 0;">Institutes Worked With</h2>
+	<div class="logo-marquee">
+		<div class="logo-track">
+			{track.map((inst, i) => (
+				<a
+					class="logo-tile"
+					href={inst.href}
+					target="_blank"
+					rel="noopener noreferrer"
+					title={inst.name}
+					aria-hidden={i >= institutes.length ? 'true' : undefined}
+					tabindex={i >= institutes.length ? -1 : undefined}
+				>
+					<Image src={inst.logo} {...fitDimensions(inst.logo)} alt={inst.name} loading="lazy" />
+				</a>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.logo-marquee {
+		position: relative;
+		margin-top: 1.5rem;
+		overflow: hidden;
+		/* Fade the strip out at both edges instead of a hard clip. */
+		-webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+		mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+	}
+	.logo-track {
+		display: flex;
+		align-items: center;
+		width: max-content;
+		animation: logo-scroll 32s linear infinite;
+	}
+	.logo-marquee:hover .logo-track {
+		animation-play-state: paused;
+	}
+	.logo-tile {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 160px;
+		height: 90px;
+		margin: 0 1.25rem;
+		padding: 0.75rem 1rem;
+		border-radius: 12px;
+		/* Logos are opaque brand assets on a white background — always keep
+		   the tile itself white so they read correctly in dark mode too. */
+		background-color: #ffffff;
+		border: 1px solid var(--color-border-strong);
+		transition: box-shadow 0.25s ease;
+	}
+	.logo-tile:hover {
+		/* Drop shadow only — no translateY lift, since that shifted the
+		   tile enough to visually overlap its own border on one edge. */
+		box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+	}
+	[data-theme='dark'] .logo-tile:hover {
+		/* A black shadow is invisible against the near-black dark
+		   background — use the same green tint the blog cards use
+		   for their dark-mode shadow instead. */
+		box-shadow: 0 12px 28px rgba(74, 222, 128, 0.35);
+	}
+	.logo-tile img {
+		display: block;
+		max-width: 100%;
+		max-height: 100%;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+	}
+
+	@keyframes logo-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			/* Exactly one full copy of the (duplicated) track's width. */
+			transform: translateX(-50%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.logo-track {
+			animation: none;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.logo-tile {
+			width: 120px;
+			height: 70px;
+			margin: 0 0.75rem;
+		}
+	}
+</style>

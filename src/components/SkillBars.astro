@@ -1,0 +1,110 @@
+---
+import type { SkillBarGroup } from '../data/cv';
+
+interface Props {
+  groups: SkillBarGroup[];
+}
+
+const { groups } = Astro.props;
+
+// A small fixed palette cycled per group, purely cosmetic — mirrors the
+// original resume page using a different bar color per skill category.
+// Every value must stay visible against BOTH the near-white light-theme
+// background and the near-black dark-theme one (the original's near-black
+// "System skills" bar color would vanish entirely in dark mode).
+const PALETTE = ['#65a30d', '#2563eb', '#db2777', '#7c3aed', '#d97706', '#64748b', '#0d9488', '#dc2626'];
+
+// A percentage number implies a precision nobody actually has — "85% at
+// Python" doesn't mean anything concrete. Collapsing to five honest tiers
+// (still driven by the same underlying `level` numbers in cv.ts, so the
+// relative ordering within a group is unchanged) reads as a judgment call
+// instead of a fake measurement. The top tier is deliberately rare in the
+// data — most skills should land in the middle of the scale, so the one or
+// two "Expert" entries actually mean something instead of everything
+// clustering at the top.
+const TIER_COUNT = 5;
+function tierFor(level: number): { label: string; filled: number } {
+  if (level >= 90) return { label: 'Expert', filled: 5 };
+  if (level >= 75) return { label: 'Advanced', filled: 4 };
+  if (level >= 60) return { label: 'Proficient', filled: 3 };
+  if (level >= 40) return { label: 'Familiar', filled: 2 };
+  return { label: 'Novice', filled: 1 };
+}
+---
+
+<div class="skill-groups">
+  {groups.map((group, i) => (
+    <div class="skill-group" style={`--bar-color: ${PALETTE[i % PALETTE.length]}`}>
+      <h2>{group.category}</h2>
+      {group.subheading && <h3 class="skill-subheading">{group.subheading}</h3>}
+      {group.skills.map((skill) => {
+        const tier = tierFor(skill.level);
+        return (
+          <div class="skill-row">
+            <div class="skill-row-label">
+              <span>{skill.name}</span>
+              <span class="skill-row-tier">{tier.label}</span>
+            </div>
+            <div class="skill-dots" role="img" aria-label={`${tier.label} proficiency`}>
+              {Array.from({ length: TIER_COUNT }, (_, idx) => idx + 1).map((dot) => (
+                <span class={`skill-dot ${dot <= tier.filled ? 'skill-dot--filled' : ''}`}></span>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  ))}
+</div>
+
+<style>
+  .skill-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .skill-group h2 {
+    margin-top: 0;
+  }
+  .skill-subheading {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    margin: 0 0 1rem 0;
+  }
+  .skill-row {
+    margin-bottom: 1rem;
+  }
+  .skill-row:last-child {
+    margin-bottom: 0;
+  }
+  .skill-row-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+    margin-bottom: 0.35rem;
+  }
+  .skill-row-tier {
+    font-weight: 500;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+  .skill-dots {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .skill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border-strong);
+    background: transparent;
+  }
+  .skill-dot--filled {
+    background: var(--bar-color, var(--color-accent));
+    border-color: var(--bar-color, var(--color-accent));
+  }
+</style>

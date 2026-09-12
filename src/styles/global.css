@@ -1,0 +1,494 @@
+/* Academic Portfolio Theme */
+
+:root {
+	/* Typography — --font-serif drives headings/display text, --font-sans
+	   drives body copy. Names kept for compatibility with existing
+	   var(--font-serif)/var(--font-sans) usage across components; the
+	   heading font is JetBrains Mono, not an actual serif. */
+	--font-sans: 'IBM Plex Sans Variable', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--font-serif: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+
+	/* --- LIGHT THEME (Default) --- */
+	--color-bg: #ffffff;
+	--color-bg-offset: #f6f6f6;
+	/* A true grey tier, not just white-on-white — cards/panels read as
+	   distinct from the page background instead of blending into it. */
+	--color-bg-header: rgba(255, 255, 255, 0.85);
+	--color-text-main: #1a1a1a;
+	--color-text-muted: #555555;
+	--color-accent: #2b2b2b;
+	/* Charcoal — the "black" in white/black/grey, replacing the old Oxford
+	   Blue accent so the palette has no blue in it at all. */
+	--color-accent-light: #ececec;
+	--color-border: #eaeaea;
+	/* Darker, more visible border for card-style panels (blog cards, tag
+	   sidebar, project cards, etc.) — the default --color-border is tuned
+	   for subtle dividers, too faint for a card's whole outline. */
+	--color-border-strong: #b3b3b3;
+	--color-header-border: rgba(0, 0, 0, 0.08);
+	--color-bg-mobile-menu: rgba(255, 255, 255, 0.95);
+
+	/* Spacing & UI */
+	--max-width: 1200px;
+	--radius: 8px;
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* --- DARK THEME --- */
+[data-theme="dark"] {
+	--color-bg: #0d0f0d;
+	--color-bg-offset: #161816;
+	--color-bg-header: rgba(13, 15, 13, 0.85);
+	--color-text-main: #e2e8e2;
+	--color-text-muted: #8a948a;
+	--color-accent: #4ade80;
+	--color-accent-light: #14532d;
+	--color-border: #2a2f2a;
+	--color-border-strong: #3f463f;
+	--color-header-border: rgba(255, 255, 255, 0.1);
+	--color-bg-mobile-menu: rgba(13, 15, 13, 0.95);
+
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+}
+
+html {
+	box-sizing: border-box;
+	scroll-behavior: smooth;
+}
+
+/* Minimal Scrollbar for Browser and Modals */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: var(--color-border);
+	border-radius: 10px;
+	border: 2px solid var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--color-text-muted);
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+body {
+	font-family: var(--font-sans);
+	background-color: var(--color-bg);
+	color: var(--color-text-main);
+	line-height: 1.6;
+	margin: 0;
+	font-size: 18px;
+	transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+main {
+	width: 100%;
+	/* box-sizing: border-box means max-width includes this rule's own
+	   padding. The header's nav uses the same var(--max-width) but has no
+	   padding of its own, so without compensating here, main's actual
+	   content area would render 2rem narrower (1rem each side) than the
+	   header above it. Add that back so both align exactly. */
+	max-width: calc(var(--max-width) + 2rem);
+	margin: 0 auto;
+	padding: 3rem 1rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+	font-family: var(--font-serif);
+	color: var(--color-text-main);
+	line-height: 1.2;
+	margin-bottom: 0.75rem;
+}
+
+h1 {
+	font-size: 2.5rem;
+	margin-top: 0;
+}
+
+h2 {
+	/* Fluid instead of a fixed 2rem: the heading font is monospace
+	   (JetBrains Mono), so a long title like "Institutes Worked With" at
+	   a flat 2rem wraps to two lines on narrow phones. Scales down with
+	   the viewport until ~580px wide, then holds at the original 2rem. */
+	font-size: clamp(1.15rem, 5.5vw, 2rem);
+	margin-top: 2rem;
+	border-bottom: 2px solid var(--color-accent);
+	padding-bottom: 0.5rem;
+	display: inline-block;
+}
+
+h3 {
+	font-size: 1.5rem;
+	color: var(--color-accent);
+	margin-top: 1.5rem;
+}
+
+p {
+	margin-bottom: 1.5rem;
+	color: var(--color-text-muted);
+}
+
+a {
+	color: var(--color-accent);
+	text-decoration: none;
+	transition: 0.2s;
+}
+
+/* A link inline in body copy (About me, blog posts, abstracts, ...) needs a
+   non-color cue too — in the light theme, the accent's Oxford Blue reads
+   too close in perceived darkness to the muted gray paragraph text to
+   register as a link at a glance, and color alone isn't an accessible way
+   to convey that. Card titles, nav items, and buttons already signal
+   "link" some other way (position, weight, a border/background), so this
+   is scoped to plain links inside prose rather than changed globally. */
+p a {
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+	text-underline-offset: 0.15em;
+}
+
+a:hover {
+	opacity: 0.8;
+	text-decoration: underline;
+}
+
+/* Buttons */
+.btn {
+	display: inline-block;
+	background-color: var(--color-accent);
+	color: var(--color-bg);
+	font-weight: 600;
+	padding: 0.5rem 1rem;
+	border-radius: 4px;
+	text-decoration: none !important;
+}
+
+.btn-outline {
+	background: transparent;
+	border: 1px solid var(--color-accent);
+	color: var(--color-accent);
+	padding: 0.5rem 1rem;
+	border-radius: 4px;
+}
+
+/* Grids */
+.grid-2 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 2rem;
+	margin-top: 2rem;
+}
+
+.grid-3 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 2rem;
+	margin-top: 2rem;
+}
+
+/* Tooltip / Author Hover */
+.author-link {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+	border-bottom: 1px dotted var(--color-accent);
+	color: var(--color-text-main);
+}
+
+.author-link:hover .author-tooltip {
+	opacity: 1;
+	visibility: visible;
+	transform: translateX(-50%) translateY(-10px);
+}
+
+.author-tooltip {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%) translateY(0);
+	background-color: var(--color-bg);
+	color: var(--color-text-main);
+	border: 1px solid var(--color-border);
+	box-shadow: var(--shadow-lg);
+	padding: 1rem;
+	width: max-content;
+	max-width: 320px;
+	border-radius: 8px;
+	opacity: 0;
+	visibility: hidden;
+	transition: all 0.2s ease-in-out;
+	z-index: 1000;
+	text-align: left;
+	pointer-events: none;
+}
+
+.author-tooltip img {
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	float: left;
+	margin-right: 1rem;
+	object-fit: cover;
+}
+
+.author-tooltip h4 {
+	margin: 0;
+	font-size: 1rem;
+	font-family: var(--font-sans);
+	color: var(--color-text-main);
+}
+
+.author-tooltip p {
+	margin: 0;
+	font-size: 0.85rem;
+	line-height: 1.4;
+	color: var(--color-text-muted);
+}
+
+.author-tooltip .role {
+	font-size: 0.8rem;
+	color: var(--color-accent);
+	display: block;
+	margin-bottom: 0.25rem;
+}
+
+/* Minimal Scrollbar for BibTeX panel */
+.bibtex-panel::-webkit-scrollbar {
+	height: 6px;
+}
+
+.bibtex-panel::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.bibtex-panel::-webkit-scrollbar-thumb {
+	background-color: var(--color-border);
+	border-radius: 10px;
+}
+
+/* Blog Row Listing */
+.blog-row {
+	display: flex;
+	gap: 1.5rem;
+	border-bottom: 1px solid var(--color-border);
+	padding: 1.5rem 0;
+	align-items: flex-start;
+}
+
+.blog-row:first-child {
+	padding-top: 0;
+}
+
+.blog-row:last-child {
+	border-bottom: none;
+}
+
+.blog-row img {
+	width: 200px;
+	height: 120px;
+	object-fit: cover;
+	border-radius: 6px;
+	flex-shrink: 0;
+}
+
+.blog-content {
+	flex: 1;
+}
+
+.blog-title {
+	margin: 0 0 0.5rem 0;
+	font-size: 1.4rem;
+	font-family: var(--font-serif);
+	color: var(--color-text-main);
+}
+
+.blog-meta {
+	font-size: 0.9rem;
+	color: var(--color-text-muted);
+	margin-bottom: 0.5rem;
+}
+
+.blog-desc {
+	margin: 0;
+	font-size: 1rem;
+	color: var(--color-text-muted);
+}
+
+/* Publication List */
+.pub-year-heading {
+	margin-top: 2.5rem;
+}
+.pub-year-heading:first-child {
+	margin-top: 0;
+}
+/* The global `h2` rule sets `display: inline-block` — an author-level
+   style, which always beats the browser's own `[hidden] { display: none }`
+   default regardless of specificity, since that default lives in the
+   lower-priority user-agent stylesheet origin. Without this, toggling the
+   `hidden` property via JS (the keyword filter) has no visible effect. */
+.pub-year-heading[hidden] {
+	display: none;
+}
+
+.publication-item {
+	margin-bottom: 1.5rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid var(--color-border);
+	/* So a #anchor link (e.g. /publications#doq_commag) doesn't scroll the
+	   entry in flush behind the sticky header. */
+	scroll-margin-top: 5.5rem;
+	border-radius: 8px;
+}
+
+@keyframes pub-flash {
+	0%, 100% { background-color: transparent; }
+	25%, 75% { background-color: var(--color-accent-light); }
+}
+.publication-item.pub-flash {
+	animation: pub-flash 1.2s ease;
+}
+
+.copy-link-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	border: 1px solid var(--color-border-strong);
+	background-color: var(--color-bg-offset);
+	color: var(--color-text-muted);
+	cursor: pointer;
+	padding: 0;
+	transition:
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+.copy-link-btn:hover {
+	color: var(--color-accent);
+	border-color: var(--color-accent);
+}
+
+.pub-tag,
+.pub-award {
+	display: inline-block;
+	padding: 0.25rem 0.75rem;
+	border-radius: 999px;
+	border: none;
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	box-shadow: var(--shadow-sm);
+	color: #ffffff;
+}
+
+.pub-tag {
+	/* Fixed green rather than the theme's --color-accent — that variable
+	   turns pale in dark mode, which would wash out white text. A
+	   button-like badge needs a background that stays solid in both
+	   themes. */
+	background-color: #16a34a;
+}
+
+.pub-award {
+	/* Same fixed-color reasoning as .pub-tag, but red — a distinct color
+	   so a recognition like "Best paper" doesn't read as just another
+	   type label. */
+	background-color: #dc2626;
+}
+
+.pub-title {
+	font-weight: 700;
+	font-size: 1.1rem;
+	color: var(--color-text-main);
+	display: block;
+	text-decoration: none;
+}
+/* Only the homepage's mini list renders this as a real <a> (linking to the
+   matching entry on /publications); the full list's own title is a plain
+   span, so this has nothing to hover there. */
+a.pub-title:hover {
+	color: var(--color-accent);
+	text-decoration: underline;
+}
+
+.pub-authors {
+	margin: 0.25rem 0;
+	color: var(--color-text-muted);
+}
+
+.pub-venue {
+	font-style: italic;
+	color: var(--color-text-muted);
+}
+
+/* Team Card */
+.team-card {
+	text-align: center;
+}
+
+.team-avatar {
+	width: 140px;
+	height: 140px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-bottom: 1rem;
+	border: 3px solid var(--color-accent-light);
+}
+
+.team-name {
+	font-weight: 700;
+	font-size: 1.1rem;
+	display: block;
+	color: var(--color-text-main);
+}
+
+.team-role {
+	font-size: 0.9rem;
+	color: var(--color-accent);
+	display: block;
+	margin-bottom: 0.5rem;
+}
+
+/* Project Card Override */
+.project-card {
+	background-color: var(--color-bg-offset);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+}
+
+/* Dark mode optimization for images */
+[data-theme="dark"] img {
+	filter: brightness(0.9);
+}
+
+@media (max-width: 720px) {
+	.blog-row {
+		flex-direction: column;
+	}
+
+	.blog-row img {
+		width: 100%;
+		height: auto;
+	}
+}

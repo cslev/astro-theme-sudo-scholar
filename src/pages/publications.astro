@@ -1,0 +1,212 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+import AuthorLink from '../components/AuthorLink.astro';
+import KeywordCloud from '../components/KeywordCloud.astro';
+import bibFileRaw from '../data/publications.bib?raw';
+import { formatAuthor, parseAwards, parseBibTeX, parseKeywords, parseTags, slugForEntry, sortByDateDesc } from '../utils/bibtex';
+
+const publications = sortByDateDesc(parseBibTeX(bibFileRaw));
+
+
+// Group into year sections — publications is already sorted newest-first,
+// so the first time a year is seen is where its section starts.
+const publicationsByYear = new Map<string, typeof publications>();
+for (const entry of publications) {
+    const year = entry.fields.year || 'Undated';
+    if (!publicationsByYear.has(year)) publicationsByYear.set(year, []);
+    publicationsByYear.get(year)!.push(entry);
+}
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Publications | ${SITE_TITLE}`} description="Academic Publications" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Publications</h1>
+			<p>{publications.length} publications.</p>
+
+			<KeywordCloud entries={publications} />
+
+			<div class="publication-list">
+				{Array.from(publicationsByYear.entries()).map(([year, entries]) => (
+					<>
+						<h2 class="pub-year-heading" data-year-heading={year}>{year}</h2>
+						{entries.map((entry) => (
+							<article id={slugForEntry(entry)} class="publication-item" data-keywords={parseKeywords(entry).join(',')}>
+						<span class="pub-title">
+                            {entry.fields.title.replace(/[{}]/g, '')}
+                        </span>
+
+						<div class="pub-authors">
+							{entry.authors && entry.authors.map((auth, i) => (
+								<>
+                                    <AuthorLink nameOrSlug={formatAuthor(auth)} />
+                                    {i < entry.authors.length - 1 ? ', ' : ''}
+                                </>
+							))}
+						</div>
+						
+						<div class="pub-venue">
+                            {
+                                (entry.fields.journal ||
+                                entry.fields.booktitle ||
+                                entry.fields.publisher ||
+                                entry.fields.school ||
+                                entry.fields.howpublished ||
+                                "Preprint").replace(/[{}]/g, '')
+                            }
+                            {entry.fields.year && <span> ({entry.fields.year})</span>}
+                        </div>
+
+						<div class="pub-links" style="margin-top: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
+							{parseAwards(entry).map((award) => (
+                                <span class="pub-award">{award}</span>
+                            ))}
+
+							{parseTags(entry).map((tag) => (
+                                <span class="pub-tag">{tag}</span>
+                            ))}
+
+							{entry.fields.pdf ? (
+                                <a href={entry.fields.pdf} target="_blank" class="btn-outline" style="padding: 2px 6px; font-size: 0.8rem;">
+                                    PDF
+                                </a>
+                            ) : entry.fields.url ? (
+                                <a href={entry.fields.url} target="_blank" class="btn-outline" style="padding: 2px 6px; font-size: 0.8rem;">
+                                    URL
+                                </a>
+                            ) : null}
+                            
+							{entry.fields.doi && <a href={`https://doi.org/${entry.fields.doi}`} target="_blank">DOI</a>}
+
+                            <details name="bibtex" style="display: inline-block;">
+                                <summary style="font-size: 0.8rem; cursor: pointer; color: var(--color-accent);">BibTeX</summary>
+                                <div class="bibtex-panel" style="position: absolute; background-color: var(--color-bg-offset); border: 1px solid var(--color-border); color: var(--color-text-main); padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; z-index: 10; width: 300px; max-height: 250px; overflow-y: auto; overflow-x: auto; margin-top: 0.5rem;">
+                                    <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                                        <button class="copy-bibtex-btn" data-bibtex={entry.raw} style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 4px; padding: 0;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            <span class="copy-text">Copy</span>
+                                        </button>
+                                    </div>
+                                    <pre style="margin: 0; font-size: 0.7rem; white-space: pre-wrap; word-break: break-all;">{entry.raw}</pre>
+                                </div>
+                            </details>
+
+                            <button type="button" class="copy-link-btn" data-slug={slugForEntry(entry)} title="Copy link to this publication" aria-label="Copy link to this publication">
+                                <svg class="copy-link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                <svg class="copy-link-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </button>
+						</div>
+
+                        {entry.fields.abstract && (
+                            <details class="abstract-details" style="margin-top: 0.5rem;">
+                                <summary style="font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--color-accent);">Abstract</summary>
+                                <p style="margin: 0.5rem 0 0; font-size: 0.9rem; line-height: 1.6; color: var(--color-text-muted);">
+                                    {entry.fields.abstract.replace(/[{}]/g, '')}
+                                </p>
+                            </details>
+                        )}
+					</article>
+					))}
+				</>
+			))}
+
+                {publications.length === 0 && (
+                    <p>No publications found.</p>
+                )}
+			</div>
+		</main>
+		<Footer />
+
+		<script>
+            // Ensure only one BibTeX panel is open at a time (fallback for browsers without 'name' attr support)
+			const detailsElements = document.querySelectorAll('details[name="bibtex"]');
+			detailsElements.forEach(details => {
+				details.addEventListener('toggle', () => {
+					if (details.hasAttribute('open')) {
+						detailsElements.forEach(other => {
+							if (other !== details && other.hasAttribute('open')) {
+								other.removeAttribute('open');
+							}
+						});
+					}
+				});
+			});
+
+            // Copy to clipboard functionality
+			const copyBtns = document.querySelectorAll('.copy-bibtex-btn');
+			copyBtns.forEach(btn => {
+				btn.addEventListener('click', async (e) => {
+					e.preventDefault(); // prevent details from toggling if button triggers
+					const bibtex = btn.getAttribute('data-bibtex');
+					const textSpan = btn.querySelector('.copy-text');
+					if (bibtex && textSpan) {
+						try {
+							await navigator.clipboard.writeText(bibtex);
+							textSpan.textContent = 'Copied!';
+                            btn.setAttribute('style', 'background: none; border: none; cursor: pointer; color: var(--color-accent); font-size: 0.75rem; display: flex; align-items: center; gap: 4px; padding: 0;');
+							setTimeout(() => {
+								textSpan.textContent = 'Copy';
+                                btn.setAttribute('style', 'background: none; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 4px; padding: 0;');
+							}, 2000);
+						} catch (err) {
+							console.error('Failed to copy', err);
+						}
+					}
+				});
+			});
+
+			// Flash the entry a #anchor link (e.g. from the homepage's
+			// "Latest Publications") jumped to, so it's obvious which one
+			// it landed on. Some citation keys start with a digit (e.g.
+			// "10.1145/3627827" -> "10-1145-3627827"), which isn't a legal
+			// CSS identifier -- getElementById sidesteps that entirely,
+			// unlike document.querySelector(location.hash).
+			function flashLinkedPublication() {
+				const id = decodeURIComponent(window.location.hash.slice(1));
+				if (!id) return;
+				const el = document.getElementById(id);
+				if (!el || !el.classList.contains('publication-item')) return;
+				el.classList.remove('pub-flash');
+				void el.offsetWidth; // restart the animation if it already ran once
+				el.classList.add('pub-flash');
+			}
+			flashLinkedPublication();
+			window.addEventListener('hashchange', flashLinkedPublication);
+
+			// Copy-link buttons: build the shareable URL at click time (not
+			// baked in at build time) so it's always correct for whatever
+			// origin actually served the page.
+			const copyLinkBtns = document.querySelectorAll('.copy-link-btn');
+			copyLinkBtns.forEach((btn) => {
+				btn.addEventListener('click', async () => {
+					const slug = btn.getAttribute('data-slug');
+					if (!slug) return;
+					const link = `${window.location.origin}${window.location.pathname}#${slug}`;
+					try {
+						await navigator.clipboard.writeText(link);
+						const icon = btn.querySelector('.copy-link-icon');
+						const check = btn.querySelector('.copy-link-check');
+						if (icon && check) {
+							icon.style.display = 'none';
+							check.style.display = '';
+							setTimeout(() => {
+								icon.style.display = '';
+								check.style.display = 'none';
+							}, 1500);
+						}
+					} catch (err) {
+						console.error('Failed to copy link', err);
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

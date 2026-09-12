@@ -1,0 +1,59 @@
+---
+import authorsData from '../data/authors.json';
+
+interface Props {
+  nameOrSlug: string;
+}
+
+const { nameOrSlug } = Astro.props;
+
+// Publication author lists are often abbreviated ("J. Smith" instead of
+// "Jane Smith"), so matching has to tolerate initials — a plain
+// substring check would never connect "J. Smith" back to the full name
+// in authors.json, and this name should always resolve and highlight.
+const namesMatch = (candidate: string, dbName: string) => {
+    const clean = (s: string) => s.toLowerCase().replace(/\./g, '').trim();
+    const candidateParts = clean(candidate).split(/\s+/).filter(Boolean);
+    const dbParts = clean(dbName).split(/\s+/).filter(Boolean);
+    if (candidateParts.length === 0 || dbParts.length === 0) return false;
+
+    const candidateLast = candidateParts[candidateParts.length - 1];
+    const dbLast = dbParts[dbParts.length - 1];
+    if (candidateLast !== dbLast) return false;
+
+    // A bare surname with no given name/initial at all still counts.
+    if (candidateParts.length === 1 || dbParts.length === 1) return true;
+
+    // Otherwise the given-name initial has to agree too, so two different
+    // people who happen to share a surname don't get merged into one
+    // profile.
+    return candidateParts[0][0] === dbParts[0][0];
+};
+
+let author = authorsData.find(a => a.id === nameOrSlug);
+// Matched by internal id (e.g. a blog post's `authors: [levente-csikor]`)
+// vs. matched by fuzzy name comparison (e.g. "J. Smith" in a .bib entry).
+// The former has no readable name of its own to preserve; the latter does,
+// and a publication's author list should keep showing exactly what's in
+// the citation, not get silently expanded.
+let matchedById = !!author;
+
+if (!author && nameOrSlug) {
+    author = authorsData.find(a => namesMatch(nameOrSlug, a.name));
+}
+
+const displayName = matchedById ? author?.name : nameOrSlug.replace(/[{}]/g, '');
+---
+
+{author ? (
+    <span class="author-highlight">{displayName}</span>
+) : (
+    <span>{nameOrSlug.replace(/[{}]/g, '')}</span>
+)}
+
+<style>
+    .author-highlight {
+        font-weight: 700;
+        color: var(--color-text-main);
+    }
+</style>

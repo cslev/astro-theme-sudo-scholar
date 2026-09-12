@@ -1,0 +1,211 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { SITE_TITLE } from '../../consts';
+import { url } from '../../utils/paths';
+import { hasMathContent } from '../../utils/math';
+
+export async function getStaticPaths() {
+	const allNews = await getCollection('news', (entry) => !entry.data.archived);
+	const news = allNews.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+	// To retire an old entry, set `archived: true` in its frontmatter — don't
+	// delete the file, and don't expect a cutoff to hide it automatically.
+	// See SETUP-NOTES.md.
+	const pageSize = 10;
+	const totalPages = Math.ceil(news.length / pageSize);
+	const paths = [];
+
+	for (let i = 1; i <= totalPages; i++) {
+		const pageEntries = news.slice((i - 1) * pageSize, i * pageSize);
+		const rendered = await Promise.all(pageEntries.map((entry) => render(entry)));
+		paths.push({
+			params: { page: i === 1 ? undefined : String(i) },
+			props: {
+				news: pageEntries,
+				rendered,
+				currentPage: i,
+				totalPages,
+				nextPage: i < totalPages ? i + 1 : null,
+				prevPage: i > 1 ? i - 1 : null,
+			},
+		});
+	}
+
+	return paths;
+}
+
+const { news, rendered, currentPage, totalPages, nextPage, prevPage } = Astro.props;
+const hasMath = news.some((entry) => hasMathContent(entry.body ?? ''));
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`News | ${SITE_TITLE}`} description="Announcements and updates" hasMath={hasMath} />
+		<style>
+			/* Same vertical-timeline treatment as the "Latest News" section on
+			   the homepage — kept in sync deliberately, see index.astro. This
+			   page additionally renders each entry's full Markdown body below
+			   the summary, since it isn't capped to the latest few items. */
+			.news-timeline {
+				list-style: none;
+				margin: 2rem 0 0;
+				padding: 0;
+				position: relative;
+			}
+			.news-timeline::before {
+				content: '';
+				position: absolute;
+				top: 0.4rem;
+				bottom: 0.4rem;
+				left: 6px;
+				width: 2px;
+				background: var(--color-border);
+			}
+			.news-entry {
+				position: relative;
+				padding-left: 2rem;
+				margin-bottom: 2.5rem;
+			}
+			.news-entry:last-child {
+				margin-bottom: 0;
+			}
+			.news-marker {
+				position: absolute;
+				left: 0;
+				top: 0.45rem;
+				width: 14px;
+				height: 14px;
+				border-radius: 50%;
+				background-color: var(--color-bg);
+				border: 2px solid var(--color-accent);
+			}
+			.news-date {
+				font-size: 0.8rem;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				color: var(--color-accent);
+				margin-bottom: 0.25rem;
+			}
+			.news-title {
+				font-family: var(--font-serif);
+				font-size: 1.15rem;
+				line-height: 1.45;
+				margin: 0 0 0.6rem 0;
+			}
+			.news-title a {
+				color: inherit;
+				text-decoration: none;
+				border-bottom: 2px solid var(--color-accent);
+			}
+			.news-title a:hover {
+				color: var(--color-accent);
+			}
+			.news-summary {
+				font-size: 0.95rem;
+				font-style: italic;
+				color: var(--color-text-muted);
+				margin: 0;
+			}
+			.news-body {
+				margin-top: 0.75rem;
+				font-size: 0.95rem;
+				color: var(--color-text-main);
+			}
+			.news-body :global(p) {
+				margin: 0;
+			}
+			.news-body :global(p:has(+ p)) {
+				margin-bottom: 0.75rem;
+			}
+			.news-body :global(img) {
+				display: block;
+				max-width: 100%;
+				height: auto;
+				margin: 0.75rem 0;
+				border-radius: 8px;
+				border: 1px solid var(--color-border);
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>News</h1>
+			<p>Announcements and updates.</p>
+
+			<ol class="news-timeline">
+				{news.map((entry, i) => {
+					const { Content } = rendered[i];
+					return (
+						<li class="news-entry">
+							<div class="news-marker" aria-hidden="true"></div>
+							<div class="news-entry-content">
+								<div class="news-date">
+									<FormattedDate date={entry.data.date} />
+								</div>
+								<h3 class="news-title">
+									{entry.data.link ? (
+										entry.data.link.startsWith('/') ? (
+											<a href={entry.data.link}>{entry.data.title}</a>
+										) : (
+											<a href={entry.data.link} target="_blank" rel="noopener noreferrer">
+												{entry.data.title}
+											</a>
+										)
+									) : (
+										entry.data.title
+									)}
+								</h3>
+								<p class="news-summary">{entry.data.summary}</p>
+								<div class="news-body">
+									<Content />
+								</div>
+							</div>
+						</li>
+					);
+				})}
+
+				{news.length === 0 && <p>No news yet.</p>}
+			</ol>
+
+			{totalPages > 1 && (
+				<div style="display: flex; justify-content: center; gap: 1rem; margin-top: 3rem; flex-wrap: wrap;">
+					{currentPage > 1 ? (
+						<a href={url('/news')} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">&laquo; First</a>
+					) : (
+						<span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">&laquo; First</span>
+					)}
+
+					{prevPage ? (
+						<a href={url(prevPage === 1 ? '/news' : `/news/${prevPage}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">&larr; Previous</a>
+					) : (
+						<span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">&larr; Previous</span>
+					)}
+
+					<span style="display: flex; align-items: center; font-weight: 600; color: var(--color-text-muted);">
+						Page {currentPage} of {totalPages}
+					</span>
+
+					{nextPage ? (
+						<a href={url(`/news/${nextPage}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">Next &rarr;</a>
+					) : (
+						<span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">Next &rarr;</span>
+					)}
+
+					{currentPage < totalPages ? (
+						<a href={url(`/news/${totalPages}`)} style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; text-decoration: none; color: var(--color-text-main); font-weight: 500;">Last &raquo;</a>
+					) : (
+						<span style="padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-muted); opacity: 0.5; cursor: not-allowed; font-weight: 500;">Last &raquo;</span>
+					)}
+				</div>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>

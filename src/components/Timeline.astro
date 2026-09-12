@@ -1,0 +1,132 @@
+---
+import type { RichText, TimelineEntry } from '../data/cv';
+
+interface Props {
+  entries: TimelineEntry[];
+}
+
+const { entries } = Astro.props;
+
+function isLink(value: RichText): value is { text: string; href: string } {
+  return typeof value !== 'string';
+}
+---
+
+<ol class="timeline">
+  {entries.map((entry) => (
+    <li class="timeline-entry">
+      <div class="timeline-marker" aria-hidden="true"></div>
+      <div class="timeline-content">
+        <div class="timeline-header">
+          <span class="timeline-pill">
+            {entry.startDate}{entry.endDate ? <> &ndash; {entry.endDate}</> : null}
+          </span>
+          {entry.organization && <span class="timeline-org">{entry.organization}</span>}
+        </div>
+        <h3 class="timeline-title">{entry.title}</h3>
+        {entry.context && (
+          <p class="timeline-context">
+            {isLink(entry.context) ? (
+              <a href={entry.context.href} target="_blank" rel="noopener noreferrer">{entry.context.text}</a>
+            ) : (
+              entry.context
+            )}
+          </p>
+        )}
+        {entry.bullets && entry.bullets.length > 0 && (
+          <div class="timeline-lines">
+            {entry.bullets.map((bullet) => (
+              <p class="timeline-line">
+                {isLink(bullet) ? (
+                  <a href={bullet.href} target="_blank" rel="noopener noreferrer">{bullet.text}</a>
+                ) : (
+                  bullet
+                )}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    left: 6px;
+    width: 2px;
+    background: var(--color-border);
+  }
+  .timeline-entry {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 1.75rem;
+  }
+  .timeline-entry:last-child {
+    margin-bottom: 0;
+  }
+  .timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--color-bg);
+    border: 2px solid var(--color-accent);
+  }
+  .timeline-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+  }
+  .timeline-pill {
+    display: inline-block;
+    padding: 0.15rem 0.75rem;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    white-space: nowrap;
+  }
+  .timeline-org {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .timeline-title {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    margin: 0 0 0.2rem 0;
+    color: var(--color-text-main);
+  }
+  .timeline-context {
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+    margin: 0 0 0.35rem 0;
+  }
+  .timeline-lines {
+    margin: 0;
+  }
+  .timeline-line {
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0 0 0.35rem 0;
+  }
+  .timeline-line:last-child {
+    margin-bottom: 0;
+  }
+</style>

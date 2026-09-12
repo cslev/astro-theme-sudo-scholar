@@ -1,0 +1,32 @@
+{
+  "name": "astro-theme-sudo-scholar",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "postbuild": "pagefind --site dist",
+    "preview": "astro preview",
+    "astro": "astro",
+    "import:medium": "node scripts/import-medium-post.mjs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^6.0.3",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "@fontsource-variable/ibm-plex-sans": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "astro": "^6.4.5",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "satori": "^0.25.0",
+    "satori-html": "^0.3.2",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@pagefind/default-ui": "^1.5.0",
+    "cheerio": "^1.2.0",
+    "pagefind": "^1.4.0"
+  }
+}
