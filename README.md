@@ -10,6 +10,10 @@
 	<a href="https://cslev.github.io/astro-theme-sudo-scholar/"><strong>Live Demo →</strong></a>
 </p>
 
+<p align="center">
+	<img src=".github/assets/demo.gif" alt="A tour of the Home, News, CV, Blog, Publications, Projects, and Datasets pages in dark mode" width="800" />
+</p>
+
 ## Features
 
 - **CV page** — work history, education, skills, teaching, certificates, as a clean print-friendly timeline; public by default, with an optional PHP password gate for PHP-capable hosting (see below)
