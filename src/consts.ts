@@ -27,9 +27,13 @@ export const CONTACT = {
 
 export type SocialIcon = 'website' | 'scholar' | 'email' | 'github' | 'linkedin' | 'twitter' | 'medium' | 'dockerhub' | 'matrix';
 
-// TODO: replace with your own social links. Delete any entries you don't
-// need, or add more — each just needs a label, href, and one of the
-// SocialIcon values above (see Footer.astro for the icon set).
+// TODO: replace with your own social links — add your actual profile path
+// to each href below (e.g. 'https://github.com/your-handle'). Delete any
+// entries you don't need, or add more — each just needs a label, href, and
+// one of the SocialIcon values above (see Footer.astro for the icon set).
+// Left as bare root-domain URLs here (no placeholder username) rather than
+// something like '/TODO', since a fake-looking username reads as a
+// plausible-but-fake account rather than an obvious placeholder.
 export const SOCIAL_LINKS: ReadonlyArray<{
   label: string;
   href: string;
@@ -37,17 +41,17 @@ export const SOCIAL_LINKS: ReadonlyArray<{
 }> = [
   {
     label: 'GitHub',
-    href: 'https://github.com/TODO',
+    href: 'https://github.com/',
     icon: 'github',
   },
   {
     label: 'LinkedIn',
-    href: 'https://linkedin.com/in/TODO',
+    href: 'https://linkedin.com/',
     icon: 'linkedin',
   },
   {
     label: 'Google Scholar',
-    href: 'https://scholar.google.com/citations?user=TODO',
+    href: 'https://scholar.google.com/',
     icon: 'scholar',
   },
   {
