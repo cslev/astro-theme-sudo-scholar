@@ -121,6 +121,31 @@ const publications = sortByDateDesc(parseBibTeX(bibFileRaw)).slice(0, 3);
 				0%, 49% { opacity: 1; }
 				50%, 100% { opacity: 0; }
 			}
+			.hero-terminal {
+				font-family: var(--font-serif);
+				/* Normal foreground text — black-ish in light mode, near-white
+				   in dark mode — same as regular body text; only the `$`
+				   prompt itself gets a fixed terminal green. */
+				color: var(--color-text-main);
+			}
+			.hero-command,
+			.hero-output {
+				display: block;
+			}
+			.hero-output {
+				margin-top: 0.15em;
+			}
+			.hero-prompt {
+				/* Fixed terminal green rather than the theme's --color-accent
+				   — this should always read as a shell prompt, independent of
+				   whatever accent color the site's light/dark theme uses. */
+				color: #15803d;
+				font-weight: 700;
+			}
+			[data-theme='dark'] .hero-prompt {
+				/* Brighter for legibility against a dark background. */
+				color: #4ade80;
+			}
 			@media (max-width: 768px) {
 				.hero { flex-direction: column-reverse; text-align: center; padding: 2rem 0; gap: 2rem; }
                 .hero-image img { width: 200px; height: 200px; }
@@ -241,8 +266,9 @@ const publications = sortByDateDesc(parseBibTeX(bibFileRaw)).slice(0, 3);
 			<section class="hero">
 				<div class="hero-content">
 					<h1 style="margin-bottom: 0.5rem; font-size: clamp(1.4rem, 5.5vw, 2.2rem); white-space: nowrap;">{SITE_TITLE}</h1>
-					<h2 style="font-weight: 400; color: var(--color-text-muted); margin-bottom: 1.5rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.05em; font-size: 1rem; border-bottom: none; padding-bottom: 0; display: block; margin-top: 0;">
-						<span id="hero-role">Researcher</span><span class="hero-cursor" aria-hidden="true"></span>
+					<h2 class="hero-terminal" style="font-weight: 400; margin-bottom: 1.5rem; font-size: 1.05rem; border-bottom: none; padding-bottom: 0; display: block; margin-top: 0;">
+						<span class="hero-command"><span class="hero-prompt" aria-hidden="true">$</span> whoami<span class="hero-cursor" aria-hidden="true"></span></span>
+						<span class="hero-output"><span id="hero-role">Researcher</span></span>
 					</h2>
 					<p style="font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">
 						TODO: replace with a short introduction — who you are, what you

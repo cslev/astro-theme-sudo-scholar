@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import '@fontsource-variable/jetbrains-mono/wght.css';
 import '@fontsource-variable/ibm-plex-sans/wght.css';
+// Handwritten look for the "preprint" publication tag only.
+import '@fontsource/caveat/700.css';
 import type { ImageMetadata } from 'astro';
 import { SITE_TITLE } from '../consts';
 import { url } from '../utils/paths';
@@ -132,10 +134,12 @@ const imageUrl = typeof image === 'string'
 	}
 </style>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<!-- TODO: replace public/favicon.ico, favicon-32x32.png, favicon-192x192.png,
-     and apple-touch-icon.png with your own icon — these are a generic
-     placeholder. -->
+<!-- TODO: replace public/logo.svg (the source of every other icon file
+     here — favicon.ico, favicon-32x32/192x192.png, apple-touch-icon.png,
+     favicon-64x64.webp, logo-large.webp — regenerate them from your own
+     logo) with your own mark. -->
 <link rel="icon" href={url('/favicon.ico')} sizes="any" />
+<link rel="icon" type="image/svg+xml" href={url('/logo.svg')} />
 <link rel="icon" type="image/png" href={url('/favicon-32x32.png')} sizes="32x32" />
 <link rel="icon" type="image/png" href={url('/favicon-192x192.png')} sizes="192x192" />
 <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />

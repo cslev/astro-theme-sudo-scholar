@@ -54,6 +54,11 @@ const displayName = matchedById ? author?.name : nameOrSlug.replace(/[{}]/g, '')
 <style>
     .author-highlight {
         font-weight: 700;
-        color: var(--color-text-main);
+        /* Fixed green (same shade as .pub-tag's badge background) rather
+           than the theme's --color-accent — that variable is near-black
+           charcoal in light mode and a much paler green in dark mode, so a
+           single fixed value is what keeps this reading as "green" with
+           solid contrast on both a white and a near-black background. */
+        color: #16a34a;
     }
 </style>

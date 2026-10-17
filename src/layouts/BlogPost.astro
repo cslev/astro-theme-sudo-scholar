@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import AuthorLink from '../components/AuthorLink.astro';
@@ -13,11 +13,17 @@ type Props = CollectionEntry<'blog'>['data'] & { id?: string, headings?: { depth
 
 const { title, description, pubDate, updatedDate, heroImage, authors, tags, id, headings = [], toc, hasMath } = Astro.props;
 const fallbackHero = id ? url(`/blog/${id}.png`) : url('/og.png');
+// Social platforms (Slack/Twitter/LinkedIn/etc.) assume the classic 1200x630
+// og:image ratio — handing them the hero photo's own, often different,
+// aspect ratio makes some of them pad the preview with letterboxing. Force
+// a matching crop specifically for that meta tag; the source photo can be
+// any shape.
+const ogImage = heroImage ? await getImage({ src: heroImage, width: 1200, height: 630, format: 'webp' }) : undefined;
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} hasMath={hasMath} />
+		<BaseHead title={title} description={description} image={ogImage?.src} hasMath={hasMath} />
 		<style>
 			html {
 				scroll-padding-top: 5.5rem; /* Account for sticky header height when scrolling to anchors */
@@ -25,15 +31,18 @@ const fallbackHero = id ? url(`/blog/${id}.png`) : url('/og.png');
 			.hero-image {
 				position: relative;
 				width: 100%;
+				aspect-ratio: 2 / 1;
 				overflow: hidden;
 			}
 			.hero-image img {
 				display: block;
-				margin: 0 auto;
+				width: 100%;
+				height: 100%;
+				/* Always fill the frame — crop, never letterbox — regardless of
+				   the source photo's own aspect ratio. */
+				object-fit: cover;
 				border-radius: 12px;
 				box-shadow: var(--shadow-md);
-				max-width: 100%;
-				height: auto;
 			}
 			.hero-image::after {
 				content: '';

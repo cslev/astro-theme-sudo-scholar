@@ -13,12 +13,17 @@ import { url } from '../utils/paths';
 <footer class="site-footer">
     <div class="footer-content">
         <div class="footer-col brand-col">
-            <h3>{SITE_TITLE}</h3>
-            <p>
-                {FOOTER_TAGLINE}
-            </p>
-            <div class="copyright">
-                &copy; {today.getFullYear()} {SITE_TITLE}.<br/>All rights reserved.
+            <div class="brand-header">
+                <img src={url('/logo-large.webp')} alt="" width="110" height="110" class="footer-logo" />
+                <div>
+                    <h3>{SITE_TITLE}</h3>
+                    <p>
+                        {FOOTER_TAGLINE}
+                    </p>
+                    <div class="copyright">
+                        &copy; {today.getFullYear()} {SITE_TITLE}.<br/>All rights reserved.
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -128,6 +133,15 @@ import { url } from '../utils/paths';
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr;
         gap: 3rem;
+    }
+    .brand-header {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+    .footer-logo {
+        display: block;
+        flex-shrink: 0;
     }
     .footer-col h3 {
         font-family: var(--font-serif);

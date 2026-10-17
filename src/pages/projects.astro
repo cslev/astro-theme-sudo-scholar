@@ -3,7 +3,20 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
-import projectsData from '../data/projects.json';
+import rawProjectsData from '../data/projects.json';
+
+interface Project {
+	id: string;
+	title: string;
+	tags?: string[];
+	youtubeId?: string;
+	logo?: string;
+	link?: string;
+	date?: string;
+	description?: string;
+}
+
+const projectsData = rawProjectsData as Project[];
 ---
 
 <!doctype html>
@@ -99,6 +112,20 @@ import projectsData from '../data/projects.json';
 				line-height: 1.35;
 				color: var(--color-text-main);
 			}
+			.project-date {
+				margin: 0;
+				font-size: 0.8rem;
+				font-weight: 600;
+				color: var(--color-text-muted);
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+			}
+			.project-description {
+				margin: 0;
+				font-size: 0.92rem;
+				line-height: 1.55;
+				color: var(--color-text-muted);
+			}
 			.project-tags {
 				display: flex;
 				flex-wrap: wrap;
@@ -164,6 +191,10 @@ import projectsData from '../data/projects.json';
 
 						<div class="project-body">
 							<h3>{project.title}</h3>
+
+							{project.date && <p class="project-date">{project.date}</p>}
+
+							{project.description && <p class="project-description">{project.description}</p>}
 
 							{project.tags && project.tags.length > 0 && (
 								<div class="project-tags">

@@ -1,0 +1,20 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import DatasetPost from '../../layouts/DatasetPost.astro';
+
+export async function getStaticPaths() {
+	const datasets = await getCollection('datasets');
+	return datasets.map((dataset) => ({
+		params: { slug: dataset.id },
+		props: dataset,
+	}));
+}
+type Props = CollectionEntry<'datasets'>;
+
+const dataset = Astro.props;
+const { Content } = await render(dataset);
+---
+
+<DatasetPost {...dataset.data} id={dataset.id}>
+	<Content />
+</DatasetPost>

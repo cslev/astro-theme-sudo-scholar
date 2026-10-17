@@ -395,6 +395,7 @@ a:hover {
 	border-radius: 999px;
 	border: none;
 	font-size: 0.7rem;
+	line-height: 1;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -415,6 +416,55 @@ a:hover {
 	   so a recognition like "Best paper" doesn't read as just another
 	   type label. */
 	background-color: #dc2626;
+}
+
+.pub-tag-pending {
+	/* Overrides .pub-tag's green/white for an "Accepted at ..." status —
+	   yellow with black text flags it as not-yet-final, a visual cue to
+	   swap the tag (and add the venue's own PDF/DOI) once the paper is
+	   actually published. */
+	background-color: #eab308;
+	color: #000000;
+}
+
+.pub-tag-talk {
+	/* Same red as .pub-award — a talk is a presentation, not a paper with
+	   its own PDF/DOI, so it gets a visually distinct type-label color. */
+	background-color: #dc2626;
+}
+
+.pub-tag-magazine {
+	background-color: #2563eb;
+}
+
+.pub-tag-journal {
+	/* White with a border rather than another solid fill — journal is the
+	   most "finished" publication type, so it reads as the plain/neutral
+	   option against the saturated badges for every other type. */
+	background-color: #ffffff;
+	color: #000000;
+	border: 1px solid var(--color-border);
+}
+
+.pub-tag-preprint {
+	/* A "scribbled on a sticky note" look for the least-final status: a
+	   handwritten font on a muted, non-solid fill, since this is
+	   explicitly not the polished final version of the work. Overrides
+	   .pub-tag's uppercase/letter-spacing, which were tuned for a normal
+	   sans badge and look wrong on a script font. Font-size/line-height
+	   are tuned so the pill matches every other tag's height exactly —
+	   Caveat needs a slightly larger size than the sans tags to stay
+	   legible at this scale, so line-height alone (not font-size) is what
+	   keeps the badge from growing. */
+	font-family: 'Caveat', cursive;
+	font-weight: 700;
+	font-size: 0.95rem;
+	line-height: 0.7;
+	text-transform: none;
+	letter-spacing: normal;
+	color: #14532d;
+	background-color: rgba(209, 213, 219, 0.7);
+	border: 1px solid var(--color-border);
 }
 
 .pub-title {

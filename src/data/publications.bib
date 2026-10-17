@@ -1,10 +1,24 @@
-@inproceedings{example2024placeholder,
+% Citation keys double as the public anchor (/publications#<key>) that news
+% items and other pages can link to. Keep keys short and readable —
+% <firstauthorlastname><year><shorttitle> (e.g. smith2024detection) — rather
+% than a reference manager's long auto-generated
+% `lastname2024entiretitleconcatenated` key.
+%
+% The `tags` field below also drives a color-coded badge next to each entry
+% (see .pub-tag-* in global.css and tagClass() in publications.astro):
+% "talk" = red, "conference" = green (the default), "magazine" = blue,
+% "journal" = white/bordered, "preprint" = a handwritten script font on a
+% muted background, and anything starting with "Accepted at" = yellow.
+% The six placeholder entries below demonstrate one of each — delete them
+% once you've added your own.
+
+@inproceedings{example2024conference,
   title={TODO: Replace With Your Publication Title},
   author={A. Example and B. Placeholder},
-  booktitle={TODO: Conference or Journal Name},
+  booktitle={TODO: Conference Name},
   year={2024},
   keywords={TODO, example, placeholder},
-  tags={TODO Tag},
+  tags={conference},
   abstract={TODO: replace with your abstract. This field is optional — the
   publications page renders it as a collapsible "Abstract" disclosure when
   present, and omits it entirely when it isn't.},
@@ -20,5 +34,47 @@
   primaryClass={cs.XX},
   url={https://arxiv.org/abs/0000.00000},
   keywords={TODO, preprint},
+  tags={preprint},
   howpublished={arXiv},
+  }
+
+@misc{example2024talk,
+  title={TODO: A Conference Talk or Invited Presentation Title},
+  author={A. Example},
+  year={2024},
+  keywords={TODO, talk},
+  tags={talk},
+  howpublished={TODO: Venue or Event Name},
+  url={https://example.com/},
+  }
+
+@article{example2022journal,
+  title={TODO: Replace With Your Journal Article Title},
+  author={A. Example and B. Placeholder},
+  journal={TODO: Journal Name},
+  year={2022},
+  keywords={TODO, journal},
+  tags={journal},
+  doi={10.0000/example},
+  }
+
+@article{example2021magazine,
+  title={TODO: Replace With Your Magazine Article Title},
+  author={A. Example},
+  journal={TODO: Magazine Name},
+  year={2021},
+  keywords={TODO, magazine},
+  tags={magazine},
+  url={https://example.com/},
+  }
+
+@misc{example2025pending,
+  title={TODO: Replace With Your Just-Accepted Paper Title},
+  author={A. Example and B. Placeholder},
+  year={2025},
+  keywords={TODO, pending},
+  % The exact text after "Accepted at" is up to you — it's shown verbatim
+  % on the badge, so put the real venue name here once you have one.
+  tags={Accepted at TODO Conference Name},
+  howpublished={TODO: Conference Name (to appear)},
   }

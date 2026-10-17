@@ -1,0 +1,193 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+import { url } from '../../utils/paths';
+
+const datasets = (await getCollection('datasets')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Datasets | ${SITE_TITLE}`} description="Datasets released alongside my research, with links and descriptions." />
+		<style>
+			.dataset-list {
+				display: flex;
+				flex-direction: column;
+				gap: 3rem;
+				margin-top: 3rem;
+				max-width: 900px;
+			}
+			.dataset-card {
+				display: block;
+				border-radius: 14px;
+				overflow: hidden;
+				box-shadow: 10px 12px 24px rgba(0, 0, 0, 0.16);
+				background-color: var(--color-bg-offset);
+				border: 1px solid var(--color-border-strong);
+				transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+			}
+			.dataset-card:hover {
+				box-shadow: 14px 16px 30px rgba(0, 0, 0, 0.2);
+				transform: translateY(-2px);
+			}
+			[data-theme='dark'] .dataset-card {
+				box-shadow: 10px 12px 24px rgba(74, 222, 128, 0.18);
+			}
+			[data-theme='dark'] .dataset-card:hover {
+				box-shadow: 14px 16px 30px rgba(74, 222, 128, 0.28);
+			}
+
+			.card-hero {
+				position: relative;
+				display: block;
+				aspect-ratio: 21/7;
+				overflow: hidden;
+				text-decoration: none;
+			}
+			.card-hero img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+				transition: transform 0.4s ease, filter 0.3s ease;
+			}
+			.dataset-card:hover .card-hero img {
+				transform: scale(1.03);
+				filter: brightness(1.05);
+			}
+			.card-title-band {
+				display: block;
+				text-decoration: none;
+				padding: 1.25rem 2rem 0;
+			}
+			.dataset-title {
+				margin: 0;
+				font-family: var(--font-serif);
+				font-size: 1.6rem;
+				line-height: 1.25;
+				letter-spacing: -0.01em;
+				color: var(--color-accent);
+			}
+			[data-theme='dark'] .dataset-title {
+				color: #ffffff;
+			}
+
+			.dataset-content {
+				padding: 1.5rem 2rem 2rem;
+			}
+			.dataset-meta {
+				font-size: 0.85rem;
+				color: var(--color-text-muted);
+				margin-bottom: 1rem;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				align-items: center;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				font-weight: 500;
+			}
+			.meta-divider {
+				color: #ddd;
+			}
+			.dataset-desc {
+				margin: 0 0 1.5rem 0;
+				color: var(--color-text-muted);
+				line-height: 1.7;
+				font-size: 1.05rem;
+			}
+			.read-more {
+				font-size: 0.9rem;
+				font-weight: 700;
+				color: var(--color-accent);
+				display: inline-flex;
+				align-items: center;
+				text-decoration: none;
+				border-bottom: 2px solid transparent;
+				transition: border-color 0.2s;
+			}
+			.read-more:hover {
+				border-bottom-color: var(--color-accent);
+			}
+
+			@media (max-width: 720px) {
+				.card-hero {
+					aspect-ratio: 16/9;
+				}
+				.card-title-band,
+				.dataset-content {
+					padding-left: 1.25rem;
+					padding-right: 1.25rem;
+				}
+				.dataset-title {
+					font-size: 1.3rem;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Datasets</h1>
+			<p style="margin-bottom: 2rem; max-width: 700px; color: var(--color-text-muted);">
+				Datasets released alongside my research — click through to a dataset's page for details and the link to access it.
+			</p>
+
+			<div class="dataset-list">
+				{
+					datasets.map((dataset) => (
+						<article class="dataset-card">
+							{dataset.data.heroImage && (
+								<a href={url(`/datasets/${dataset.id}/`)} class="card-hero">
+									<Image width={1200} height={400} src={dataset.data.heroImage} alt={dataset.data.title} />
+								</a>
+							)}
+
+							<a href={url(`/datasets/${dataset.id}/`)} class="card-title-band">
+								<h2 class="dataset-title">{dataset.data.title}</h2>
+							</a>
+
+							<div class="dataset-content">
+								<div class="dataset-meta">
+									<FormattedDate date={dataset.data.pubDate} />
+
+									{dataset.data.tags && dataset.data.tags.length > 0 && (
+										<>
+											<span class="meta-divider">&bull;</span>
+											<span style="display: inline-flex; flex-wrap: wrap; gap: 0.25rem;">
+												{dataset.data.tags.map((tag) => (
+													<span>#{tag}</span>
+												))}
+											</span>
+										</>
+									)}
+								</div>
+
+								<p class="dataset-desc">
+									{dataset.data.description}
+								</p>
+
+								<a href={url(`/datasets/${dataset.id}/`)} class="read-more">View Dataset &rarr;</a>
+							</div>
+						</article>
+					))
+				}
+
+				{datasets.length === 0 && (
+					<p style="text-align: center; color: var(--color-text-muted);">
+						No datasets published yet.
+					</p>
+				)}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

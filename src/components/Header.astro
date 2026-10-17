@@ -16,7 +16,7 @@ const isBlogSectionActive = ['/blog', '/archive', '/tags'].some(
 
 <header>
 	<nav>
-		<h2><a href={url('/')}>{SITE_TITLE}</a></h2>
+		<h2><a href={url('/')}><img src={url('/favicon-64x64.webp')} alt="" width="34" height="34" class="brand-logo" />{SITE_TITLE}</a></h2>
 
 		<div class="internal-links">
 			<HeaderLink href={url('/news')}>News</HeaderLink>
@@ -31,6 +31,7 @@ const isBlogSectionActive = ['/blog', '/archive', '/tags'].some(
 			</div>
 			<HeaderLink href={url('/publications')}>Publications</HeaderLink>
 			<HeaderLink href={url('/projects')}>Projects</HeaderLink>
+			<HeaderLink href={url('/datasets')}>Datasets</HeaderLink>
 		</div>
 
         <div class="header-actions">
@@ -65,6 +66,7 @@ const isBlogSectionActive = ['/blog', '/archive', '/tags'].some(
         </div>
         <a href={url('/publications')}>Publications</a>
         <a href={url('/projects')}>Projects</a>
+        <a href={url('/datasets')}>Datasets</a>
     </div>
 </header>
 
@@ -127,9 +129,16 @@ const isBlogSectionActive = ['/blog', '/archive', '/tags'].some(
         letter-spacing: -0.02em;
 	}
 	h2 a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
 		text-decoration: none;
 		color: var(--color-text-main);
         border: none;
+	}
+	.brand-logo {
+		display: block;
+		flex-shrink: 0;
 	}
 
 	.internal-links {

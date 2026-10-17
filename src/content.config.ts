@@ -56,4 +56,22 @@ const news = defineCollection({
 		}),
 });
 
-export const collections = { blog, news };
+const datasets = defineCollection({
+	// Load Markdown and MDX files in the `src/content/datasets/` directory.
+	loader: glob({ base: './src/content/datasets', pattern: '**/*.{md,mdx}' }),
+	schema: ({ image }: SchemaContext) =>
+		z.object({
+			title: z.string(),
+			description: z.string(),
+			pubDate: z.coerce.date(),
+			updatedDate: z.coerce.date().optional(),
+			heroImage: image().optional(),
+			// Where the actual data lives (Zenodo, GitHub, IEEE DataPort, etc.) —
+			// surfaced as the "Access Dataset" button on the dataset's page.
+			datasetUrl: z.string().url(),
+			authors: z.array(z.string()).optional(), // References 'id' in authors.json
+			tags: z.array(z.string()).optional(),
+		}),
+});
+
+export const collections = { blog, news, datasets };

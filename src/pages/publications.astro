@@ -10,6 +10,20 @@ import { formatAuthor, parseAwards, parseBibTeX, parseKeywords, parseTags, slugF
 
 const publications = sortByDateDesc(parseBibTeX(bibFileRaw));
 
+// Type-label tags (talk/magazine/journal/...) get their own badge color so
+// the publication kind is readable at a glance; an "Accepted at ..."
+// pending-publication tag always wins regardless of its own text, and
+// anything else (conference, preprint, poster, demo, ...) keeps the
+// default green .pub-tag look.
+function tagClass(tag: string): string {
+    const t = tag.trim().toLowerCase();
+    if (t.startsWith('accepted at')) return 'pub-tag pub-tag-pending';
+    if (t === 'talk') return 'pub-tag pub-tag-talk';
+    if (t === 'magazine') return 'pub-tag pub-tag-magazine';
+    if (t === 'journal') return 'pub-tag pub-tag-journal';
+    if (t === 'preprint') return 'pub-tag pub-tag-preprint';
+    return 'pub-tag';
+}
 
 // Group into year sections — publications is already sorted newest-first,
 // so the first time a year is seen is where its section starts.
@@ -71,18 +85,19 @@ for (const entry of publications) {
                             ))}
 
 							{parseTags(entry).map((tag) => (
-                                <span class="pub-tag">{tag}</span>
+                                <span class={tagClass(tag)}>{tag}</span>
                             ))}
 
-							{entry.fields.pdf ? (
+							{entry.fields.pdf && (
                                 <a href={entry.fields.pdf} target="_blank" class="btn-outline" style="padding: 2px 6px; font-size: 0.8rem;">
                                     PDF
                                 </a>
-                            ) : entry.fields.url ? (
+                            )}
+                            {entry.fields.url && (
                                 <a href={entry.fields.url} target="_blank" class="btn-outline" style="padding: 2px 6px; font-size: 0.8rem;">
                                     URL
                                 </a>
-                            ) : null}
+                            )}
                             
 							{entry.fields.doi && <a href={`https://doi.org/${entry.fields.doi}`} target="_blank">DOI</a>}
 
