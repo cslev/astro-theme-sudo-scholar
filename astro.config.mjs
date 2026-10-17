@@ -10,8 +10,12 @@ import remarkMath from 'remark-math';
 // https://astro.build/config
 export default defineConfig({
 	// TODO: replace with your own deployed domain — required for sitemap.xml,
-	// rss.xml, and canonical/OG URLs to be correct.
-	site: 'https://example.com',
+	// rss.xml, and canonical/OG URLs to be correct. Set here to the live
+	// demo's GitHub Pages project-site URL; `base` below matches the repo
+	// name. If you deploy to a custom domain instead, change `site` to that
+	// domain and remove `base` entirely (see docs.astro.build/en/guides/deploy/github/).
+	site: 'https://cslev.github.io',
+	base: '/astro-theme-sudo-scholar',
 	integrations: [
 		mdx(),
 		sitemap()
