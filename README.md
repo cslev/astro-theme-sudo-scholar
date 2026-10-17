@@ -8,11 +8,18 @@
 
 <p align="center">
 	<a href="https://cslev.github.io/astro-theme-sudo-scholar/"><strong>Live Demo →</strong></a>
+	·
+	<a href="https://cslev.vip"><strong>Real-World Example →</strong></a>
 </p>
 
 <p align="center">
 	<img src=".github/assets/demo.gif" alt="A tour of the Home, News, CV, Blog, Publications, Projects, and Datasets pages in dark mode" width="800" />
 </p>
+
+The Live Demo above is this repo's own placeholder content, deployed as-is.
+[cslev.vip](https://cslev.vip) is the author's actual personal site, built
+on this same foundation and filled in with real content — a look at what
+it becomes once you replace the `TODO:`s.
 
 ## Features
 
