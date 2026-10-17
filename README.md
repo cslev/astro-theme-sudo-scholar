@@ -249,4 +249,4 @@ optional password gate — see "CV Password Gate" above.)
 
 ## License
 
-Built on top of the MIT-licensed [Astro Scholar](https://github.com/shravanngoswamii/astro-scholar) template. Licensed under the MIT [LICENSE](LICENSE) — the original template's copyright notice is preserved there as required by its license; this template's own changes are likewise free to reuse under the same terms.
+Built on top of the MIT-licensed [Astro Scholar](https://github.com/shravanngoswamii/astro-scholar) template as a base and starting point. Several components, pages, and utilities remain close to the original; others — the CV, Publications (BibTeX), Datasets, and News systems, the terminal-styled hero, and the overall styling — were substantially rewritten or added from scratch. Licensed under the MIT [LICENSE](LICENSE) — the original template's copyright notice is preserved there as required by its license; this template's own changes are likewise free to reuse under the same terms.
