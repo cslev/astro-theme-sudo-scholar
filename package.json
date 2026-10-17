@@ -1,7 +1,26 @@
 {
   "name": "astro-theme-sudo-scholar",
+  "description": "An Astro template for academic and professional personal sites — CV, blog, publications (BibTeX), projects, datasets, and news. Fully static, deployable to any host.",
   "type": "module",
   "version": "0.1.0",
+  "license": "MIT",
+  "author": "Levente Csikor",
+  "homepage": "https://cslev.github.io/astro-theme-sudo-scholar/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cslev/astro-theme-sudo-scholar"
+  },
+  "keywords": [
+    "astro",
+    "astro-template",
+    "astro-theme",
+    "cv",
+    "resume",
+    "portfolio",
+    "academic",
+    "publications",
+    "blog"
+  ],
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

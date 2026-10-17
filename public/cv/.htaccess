@@ -1,3 +1,0 @@
-# Make sure /cv/ resolves to the PHP gate, regardless of the server's
-# default DirectoryIndex order.
-DirectoryIndex index.php index.html

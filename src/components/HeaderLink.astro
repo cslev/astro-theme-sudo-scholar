@@ -12,14 +12,7 @@ const normalizePath = (path: string) => {
 	return withoutBase.replace(/\/+$/, '') || '/';
 };
 
-// The CV page builds to /cv-content/ (see "CV Password Gate" in README.md:
-// /cv/ is a PHP proxy that streams this page's built HTML, not a real
-// Astro route) — so Astro.url.pathname here is "/cv-content" even though
-// every visitor-facing link and the browser's address bar say "/cv".
-// Without this remap, the nav item for "/cv" would never match the page's
-// real build-time pathname and would never show as active.
-const rawPathname = normalizePath(Astro.url.pathname);
-const pathname = rawPathname === '/cv-content' ? '/cv' : rawPathname;
+const pathname = normalizePath(Astro.url.pathname);
 const hrefValue = typeof href === 'string' ? href : href?.toString() || '/';
 const isExternal = /^(https?:|mailto:|tel:)/.test(hrefValue);
 const normalizedHref = isExternal ? hrefValue : normalizePath(hrefValue);

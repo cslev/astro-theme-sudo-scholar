@@ -6,6 +6,20 @@
 	to any static host.
 </p>
 
+<p align="center">
+	<a href="https://cslev.github.io/astro-theme-sudo-scholar/"><strong>Live Demo →</strong></a>
+</p>
+
+## Features
+
+- **CV page** — work history, education, skills, teaching, certificates, as a clean print-friendly timeline; public by default, with an optional PHP password gate for PHP-capable hosting (see below)
+- **Publications** — BibTeX-driven, with a filterable topical keyword cloud and color-coded type badges (conference, journal, magazine, talk, preprint, pending)
+- **Datasets** — a listing + detail-page collection for releasing data alongside your research, each with its own "Access Dataset" link
+- **Blog** — tags, an archive view, table of contents, author bylines, and built-in site search (Pagefind)
+- **News** — a lightweight announcements feed, independent of the blog
+- **Dark mode**, a terminal-styled `$ whoami` hero, and auto-generated social-preview (OG) images per page
+- Zero server runtime required — everything ships as static HTML/CSS/JS
+
 ## Getting Started
 
 ```bash
@@ -40,7 +54,6 @@ for `TODO` to find every spot that needs your own content.
 - `src/content/blog/*.md` — blog posts (see `docs/blog-post-authoring.md` for the frontmatter schema and two Markdown gotchas worth knowing about)
 - `src/content/news/*.md` — news items (see "News workflow" below)
 - `astro.config.mjs` — set `site:` to your actual deployed domain (required for a correct sitemap/RSS/OG URLs)
-- `public/cv/index.php` — see "CV Password Gate" below
 - `src/styles/global.css` — theme colors and typography
 
 The one placeholder blog post and one placeholder news item are there to
@@ -55,37 +68,142 @@ rather than deleting the file, so the record isn't lost.
 
 ## Layout & Components
 
-- `src/pages/cv-content.astro` — the actual CV page content. **Never rename this file** — the CV password gate (below) depends on this exact build path.
+- `src/pages/cv.astro` — the CV page, public by default (see "CV Password Gate" below if you want to lock it down)
 - `src/layouts/BlogPost.astro` — blog post layout
 - `src/components/Header.astro` / `Footer.astro` — nav and footer
 
-## CV Password Gate (optional)
+## CV Password Gate (optional, off by default)
 
-`/cv` can be put behind a password prompt via a small PHP proxy
-(`public/cv/index.php`) in front of the built `cv-content.astro` page.
-**This only works on PHP-capable hosting** (Apache/LiteSpeed + PHP — most
-shared/cPanel hosting). On a static-only host (Netlify, Vercel, GitHub
-Pages, ...) this file never executes, so `/cv` is simply public — that's
-an acceptable fallback, not a broken state, but worth knowing before you
-rely on it for anything sensitive.
+`/cv` is fully public out of the box, so the template works identically on
+every host — including static-only ones like GitHub Pages, Netlify, and
+Vercel, which can't run the gate described below at all. Turn this on only
+if you're deploying to **PHP-capable hosting** (Apache/LiteSpeed + PHP —
+most shared/cPanel hosting) and actually want the CV behind a password.
 
-The shipped default password is **`changeme`** — a working demo credential,
-not a real secret. Before deploying anywhere real:
+The mechanism: a small PHP proxy sits in front of the built CV page, which
+is itself moved somewhere a direct HTTP request can't reach — only the PHP
+script can read it off disk. Setting it up is six steps:
 
-1. Generate a bcrypt hash for your own password:
+1. **Rename the CV page** so it no longer builds to the public `/cv/` URL:
+   ```bash
+   git mv src/pages/cv.astro src/pages/cv-content.astro
+   ```
+2. **Hide it from the search index** — open `src/pages/cv-content.astro`
+   and add `data-pagefind-ignore` to its `<body>` tag:
+   ```diff
+   -<body>
+   +<body data-pagefind-ignore>
+   ```
+   Without this, Pagefind (which walks every built HTML file, unaffected by
+   `.htaccess`) would index and publicly expose the full CV text through
+   the site's own search box — defeating the gate entirely.
+3. **Block direct access** to the built CV file — create
+   `public/cv-content/.htaccess`:
+   ```apache
+   # Apache 2.4+
+   <IfModule mod_authz_core.c>
+       Require all denied
+   </IfModule>
+
+   # Apache 2.2 fallback
+   <IfModule !mod_authz_core.c>
+       Order deny,allow
+       Deny from all
+   </IfModule>
+   ```
+4. **Add the gate script** — create `public/cv/.htaccess`:
+   ```apache
+   DirectoryIndex index.php index.html
+   ```
+   and `public/cv/index.php`:
+   ```php
+   <?php
+   const CV_PASSWORD_HASH = '$2b$10$rCObfmKAzFDU5DSdeoBLcumQvN58U0zxziJqw9cc.qGkrWI0vJkNO'; // "changeme" — replace this, see step 6
+   const CONTENT_FILE = __DIR__ . '/../cv-content/index.html';
+   const GATE_URL = '/cv/';
+
+   $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+   session_set_cookie_params([
+       'lifetime' => 0,
+       'path' => '/',
+       'secure' => $isHttps,
+       'httponly' => true,
+       'samesite' => 'Lax',
+   ]);
+   session_start();
+
+   $error = '';
+
+   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+       $password = $_POST['password'] ?? '';
+       if (password_verify($password, CV_PASSWORD_HASH)) {
+           session_regenerate_id(true);
+           $_SESSION['cv_ok'] = true;
+           header('Location: ' . GATE_URL);
+           exit;
+       }
+       sleep(1); // trivial brute-force deterrent, not a substitute for a strong password
+       $error = 'Incorrect password.';
+   }
+
+   if (!empty($_SESSION['cv_ok'])) {
+       if (!is_readable(CONTENT_FILE)) {
+           http_response_code(500);
+           echo 'CV content is unavailable right now.';
+           exit;
+       }
+       header('Content-Type: text/html; charset=utf-8');
+       header('Cache-Control: no-store, private');
+       readfile(CONTENT_FILE);
+       exit;
+   }
+   ?>
+   <!doctype html>
+   <html lang="en">
+   <head>
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width,initial-scale=1" />
+   <meta name="robots" content="noindex, nofollow" />
+   <title>CV</title>
+   </head>
+   <body>
+     <h1>This CV is password-protected</h1>
+     <?php if ($error !== ''): ?><p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+     <form method="post" action="<?= htmlspecialchars(GATE_URL, ENT_QUOTES, 'UTF-8') ?>">
+       <input type="password" name="password" placeholder="Password" autofocus required />
+       <button type="submit">View CV</button>
+     </form>
+   </body>
+   </html>
+   ```
+   (Style the form however you like — this is deliberately bare-bones.)
+5. **Restore the nav active-state fix** — the CV page now builds to
+   `/cv-content/` again while every link still points at `/cv/` (the PHP
+   proxy), so the nav highlighting needs to know these are the same page.
+   In `src/components/HeaderLink.astro`, add this remap right before
+   `const hrefValue = ...`:
+   ```diff
+   +// The CV page builds to /cv-content/, but every visitor-facing link
+   +// (and the browser's address bar) says "/cv" — the PHP gate in front of
+   +// it rewrites the URL. Without this remap, the nav item for "/cv" would
+   +// never match the page's real build-time pathname.
+   +const rawPathname = normalizePath(Astro.url.pathname);
+   +const pathname = rawPathname === '/cv-content' ? '/cv' : rawPathname;
+   -const pathname = normalizePath(Astro.url.pathname);
+   ```
+6. **Set a real password.** The hash above is for the placeholder password
+   `changeme` — generate your own before deploying anywhere real:
    ```bash
    php -r "echo password_hash('yournewpassword', PASSWORD_BCRYPT), PHP_EOL;"
    ```
-2. Replace `CV_PASSWORD_HASH` in `public/cv/index.php` with the output.
-3. Never commit the plaintext password itself, only the hash.
+   and replace `CV_PASSWORD_HASH` in `public/cv/index.php` with the output.
+   Never commit the plaintext password itself, only the hash.
 
-Locally, `/cv` 404s during `npm run dev` — that's expected, since the dev
-server doesn't execute PHP. The gate only actually works once deployed to
-PHP-capable hosting.
-
-If you don't want this feature at all, delete `public/cv/index.php`,
-`public/cv/.htaccess`, and `public/cv-content/.htaccess`, and point the
-`/cv` nav link at `/cv-content` directly instead.
+Locally, `/cv` will 404 during `npm run dev` once you've done this — that's
+expected, since the dev server doesn't execute PHP. The gate only actually
+works once deployed to PHP-capable hosting; on any static-only host it
+would 404 the same way in production, so don't enable this unless you know
+your host runs PHP.
 
 ## Build & Deploy
 
@@ -105,14 +223,15 @@ src/
 	content/news/    Markdown news items
 	data/            CV, authors, projects, publications (BibTeX)
 	layouts/         Page layouts (blog post)
-	pages/           Route files (cv-content, publications, projects, news, tags, 403/404, ...)
+	pages/           Route files (cv, publications, projects, news, tags, 403/404, ...)
 	styles/          Global styles
 	utils/           BibTeX parsing, OG image generation, path helpers
 public/
-	cv/              Optional CV password-gate proxy (PHP)
-	cv-content/      Built CV HTML, blocked from direct access
 	projects/        Project logo images
 ```
+
+(`public/cv/` and `public/cv-content/` only exist if you've set up the
+optional password gate — see "CV Password Gate" above.)
 
 ## Docs
 
