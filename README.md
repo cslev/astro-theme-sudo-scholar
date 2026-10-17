@@ -8,7 +8,7 @@
 
 <p align="center">
 	<a href="https://cslev.github.io/astro-theme-sudo-scholar/"><strong>Live Demo →</strong></a>
-	·
+	<br />
 	<a href="https://cslev.vip"><strong>Real-World Example →</strong></a>
 </p>
 
